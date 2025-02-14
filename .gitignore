@@ -1,0 +1,71 @@
+# Default output directory
+/build/
+
+# Backup and Temporary Files
+*.bak
+*~
+*.swp
+*.ninja
+*.cmake
+compile_commands.json
+CMakeCache.txt
+CMakePresets.json
+CMakeFiles/
+
+# C Object Files
+*.o
+*.a
+*.d
+
+# Inclusions for libraries
+!module/*/lib/mod_*.a
+
+# Ctags Index
+tags
+
+# Cscope Index
+cscope.*
+
+# Eclipse IDE
+.cproject
+.project
+.settings
+.externalToolBuilders
+*.pydevproject
+
+# Git
+*.orig
+*.patch
+
+# Intellij IDE
+.idea
+
+# Python Bytecode
+*.pyc
+
+# QtCreator IDE
+*.config
+*.creator
+*.creator.user*
+*.files
+*.includes
+
+# Sublime Text Editor
+*.sublime-project
+*.sublime-workspace
+
+# Visual Studio Code IDE
+.vscode/
+.cache/
+
+.mxproject
+
+# Docker
+
+# General
+.vagrant/
+.bundle/
+.DS_Store
+
+### Vagrant Patch ###
+*.box
