@@ -1,18 +1,18 @@
-<img src="keyboard.png" align="right" width=300 title="keyboard icons">
+<h2>Nanokey</h2>
+<img src="keyboard.png" align="left" width=30% title="keyboard icons">
 
-<h1 align="left" id="title">Nanokey</h1>
-<p id="description">A minimal firmware for the Keychron K8 Pro keyboard</p>
+<p align="left"><img src="https://img.shields.io/badge/compiler-arm--none--eabi--gcc-brightgreen?style=flat" alt="shields"> <img src="https://img.shields.io/badge/language-C%2Fasm-red?style=flat" alt="shields"> <img src="https://img.shields.io/badge/build_system-CMake-purple?style=flat" alt="shields"> <img src="https://img.shields.io/badge/platform-ARM-blue?style=flat" alt="shields"></p>
 
-<p align="left"><img src="https://img.shields.io/badge/compiler-arm--none--eabi--gcc-brightgreen?style=flat" alt="shields"> <img src="https://img.shields.io/badge/language-C%2Fasm-red?style=flat" alt="shields"> <img src="https://img.shields.io/badge/build_system-CMake-purple?style=flat" alt="shields"></p>
+<p id="description" style="text-size:20">A minimal firmware for the Keychron K8 Pro keyboard</p>
 
   
-  
-<h2>Features</h2>
+### Features
 
 *   Complete USB/Bluetooth support
 *   Firmware upgrade via USB
 *   Easily customizable light effects
 
+<br><br><br>
 <h2>Installation Steps 🛠️</h2>
 
 1. make the build directory
