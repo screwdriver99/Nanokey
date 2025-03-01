@@ -15,6 +15,12 @@ extern "C"
 
     void deinitHAL();
 
+    // return the current timer tick value
+    uint32_t getCurrentTicks();
+
+    // pause the execution until minimum delay has passed since ticks time
+    void pauseUntil(uint32_t ticks, uint32_t minimum);
+
     //==========GPIO============
     void writePin(uint8_t pin, bool state);
 

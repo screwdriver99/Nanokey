@@ -1,5 +1,6 @@
 #include "hal.h"
 
+#include "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h"
 #include "cmsis_gcc.h"
 #include "keyboardhid.h"
 #include "stm32l4xx_hal_i2c.h"
@@ -42,6 +43,16 @@ void deinitHAL()
     HAL_UART_DeInit(_setup.uarth);
 }
 
+uint32_t getCurrentTicks() { return HAL_GetTick(); }
+
+void pauseUntil(uint32_t prevTicks, uint32_t minimum)
+{
+    while ((HAL_GetTick() - prevTicks) < minimum)
+    {
+        asm volatile("nop" ::: "memory");
+    }
+}
+
 //=========================GPIO============================
 
 void writePin(uint8_t pin, bool state)
@@ -81,55 +92,55 @@ uint32_t getRandom()
 
 //==========================KEYS============================
 
-// one unit is approx 100ns @ 80MHz
+// one unit is approx 10ns @ 80MHz
 void _delay(uint16_t n)
 {
     while (n-- > 0)
     {
-        asm volatile("nop" ::: "memory");
+        __NOP();
     }
 }
 
 void clock()
 {
     writePin(SRCLK, true);
-    _delay(50);
+    _delay(4);
     writePin(SRCLK, false);
-    _delay(50);
+    _delay(4);
 }
 
 void show()
 {
     // clock on the SR storage clock pin
     writePin(SRSTG, true);
-    _delay(50);
+    _delay(4);
     writePin(SRSTG, false);
-    _delay(50);
+    _delay(4);
 }
 
 void selectFirstCol()
 {
     writePin(SRDAT, true);
     writePin(COL_0, true);
-    _delay(10);
+    _delay(5);
 
     // set the whole shift register
     for (uint8_t i = 0; i < 16; i++) clock();
 
     // clock in one '0'
     writePin(SRDAT, false);
-    _delay(100);
+    _delay(5);
     clock();
     writePin(SRDAT, true);
 
-    _delay(50);
+    _delay(5);
     show();
 }
 
 void nextCol()
 {
     clock();
-    _delay(10);
+    _delay(5);
     show();
 }
 
@@ -155,11 +166,11 @@ void getKeys(keymap* km)
         setBit(&(km->row[5]), i, readPin(ROW_5));
 
         nextCol();
-        _delay(50);
+        _delay(40);
     }
 
     writePin(COL_0, false);
-    _delay(10);
+    _delay(50);
 
     setBit(&(km->row[0]), 0, readPin(ROW_0));
     setBit(&(km->row[1]), 0, readPin(ROW_1));

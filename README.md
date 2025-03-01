@@ -44,7 +44,7 @@ After the first Nanokey flash, it will be possible to boot to DFU keeping ESC pr
 - [x] USB protocol
 - [x] Bluetooth features
 - [x] Battery management with emergency sleep state
-- [ ] Improve the timing, removing the delayms in the event loop
+- [x] Improve the timing, removing the delayms in the event loop
 - [ ] Implement OS switch feature (Win/MacOS)
 - [ ] Use the three keys in the top-right corner of the keyboard (now unmapped)
 - [ ] Implement consumer keys

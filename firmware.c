@@ -360,12 +360,12 @@ bool isBluetoothIndicator(uint8_t i, uint8_t j)
     return j == 1 || j == 2 || j == 3;
 }
 
-void setBluetoothIndicatorLed(uint8_t j, uint8_t r, uint8_t g, uint8_t b)
+void setBluetoothIndicatorLed(uint8_t i, uint8_t j, uint8_t r, uint8_t g, uint8_t b)
 {
     if (btGetHostIndex() == j)
-        setLed(1, j, 0, 0, 255);
+        setLed(i, j, 0, 0, 255);
     else
-        setLed(1, j, r, g, b);
+        setLed(i, j, r, g, b);
 }
 
 void loop()
@@ -373,7 +373,10 @@ void loop()
     static keymap km;
     static report_keyboard_t kbReport;
     static KBLeds kbLeds;
-    static uint8_t blinker = 0;
+    static uint8_t blinker   = 0;
+    static uint32_t timeTick = 0;
+
+    timeTick = getCurrentTicks();
 
     bool fnkey = false;
 
@@ -424,19 +427,13 @@ void loop()
     if (btMode)
     {
         static uint8_t retryConnection = 0;
-        static uint8_t btSlower        = 0;
 
         if (btstatus == BDS_Connected)
         {
             blinker = 0;
             writePin(LED_BT, true);
             kbLeds = btGetLeds();
-            btSendKeys(&kbReport);  // BT report rate is lower than USB
-            if (!fnkey && btSlower == 11)
-            {
-                btSlower = 0;
-            }
-            btSlower++;
+            btSendKeys(&kbReport);
         }
         else if (btstatus == BDS_Disconnected)
         {
@@ -469,6 +466,8 @@ void loop()
     {
         for (int j = 0; j < 17; j++)
         {
+            // animation
+
             if (km.row[i] & ((uint32_t)0x1 << j))  // pressed
             {
                 animation[i][j] = 0xff;
@@ -478,14 +477,15 @@ void loop()
                 decrement(&animation[i][j]);
             }
 
-            // bluetooth indicators
+            // colors
 
             if (btMode && btstatus == BDS_Pairing && isBluetoothIndicator(i, j))
-                setBluetoothIndicatorLed(j, 255, 255 - animation[i][j], 255 - animation[i][j]);
+                setBluetoothIndicatorLed(1, j, 255, 255 - animation[i][j], 255 - animation[i][j]);
             else
                 setLed(i, j, 255, 255 - animation[i][j], 255 - animation[i][j]);
         }
     }
 
-    delayms(1);
+    // loop time is 12ms for bluetooth 90Hz, or 1ms for USB 1kHz
+    pauseUntil(timeTick, btMode ? 12 : 1);
 }

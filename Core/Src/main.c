@@ -96,7 +96,6 @@ int main(void)
     MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
 
-    // PLEASE COMMENT OUT THE AUTO-GENERATED MX_USB_PCD_Init() FUNCTION CALL ABOVE ^^^^
     hUsbDeviceFS.pData = &hpcd_USB_FS;
     hpcd_USB_FS.pData  = &hUsbDeviceFS;
 
