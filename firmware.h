@@ -60,9 +60,9 @@ extern "C"
             {0x7b, 0x8b, 0x6b, DRIVER_ADDR_1},  // F11
             {0x8c, 0x6c, 0x7c, DRIVER_ADDR_1},  // F12
             {0x6d, 0x7d, 0x8d, DRIVER_UNUSED},  // ghost
-            {0x7e, 0x8e, 0x6e, DRIVER_ADDR_1},  // SCREENSHOT
-            {0x8f, 0x6f, 0x7f, DRIVER_ADDR_1},  // MIC
-            {0x01, 0x11, 0x21, DRIVER_ADDR_2},  // LIGHT_EFFECT
+            {0x7e, 0x8e, 0x6e, DRIVER_ADDR_1},  // M1
+            {0x8f, 0x6f, 0x7f, DRIVER_ADDR_1},  // M2
+            {0x01, 0x11, 0x21, DRIVER_ADDR_2},  // M3
         },
         {
             // ROW 2 [DRV 1]
@@ -183,9 +183,9 @@ extern "C"
             0x44,  // F11
             0x45,  // F12
             NOKC,  // ghost
-            0x46,  // SCREENSHOT
-            NOKC,  // MIC
-            NOKC,  // LIGHT_EFFECT
+            NOKC,  // M1
+            NOKC,  // M2
+            NOKC,  // M3
         },
         {
             // ROW 2
@@ -288,12 +288,6 @@ extern "C"
             0x4f,  // RARROW
         },
     };
-
-    void initLedDriver();
-
-    void initLedMatrix();
-
-    void setLed(uint8_t row, uint8_t col, uint8_t r, uint8_t g, uint8_t b);
 
     void startup(setupInstructions setup);
 

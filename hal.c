@@ -1,7 +1,6 @@
 #include "hal.h"
 
 #include "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h"
-#include "cmsis_gcc.h"
 #include "keyboardhid.h"
 #include "stm32l4xx_hal_i2c.h"
 #include "stm32l4xx_hal_pcd.h"
@@ -325,3 +324,5 @@ void JumpToBootloader()
     // Jump to app firmware
     BOOTVTAB->Reset_Handler();
 }
+
+//==========================================================

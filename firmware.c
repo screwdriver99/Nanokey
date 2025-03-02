@@ -12,7 +12,15 @@
 bool btMode                    = false;
 BluetoothDeviceStatus btstatus = BDS_Disconnected;
 uint8_t animation[MATRIX_H][MATRIX_W];
-bool firstCycle = true;
+uint8_t brightness_step = 10;
+uint8_t brightness      = 255;
+
+uint8_t map(uint8_t val, uint8_t min, uint8_t max, uint8_t newmin, uint8_t newmax)
+{
+    return (val - min) * (newmax - newmin) / (max - min) + newmin;
+}
+
+void updateBrightnessRaw() { brightness = map(brightness_step, 1, 10, 10, 255); }
 
 void initLedDriver()
 {
@@ -87,16 +95,16 @@ void initLedMatrix()
     initLedDriver();
 }
 
-void setLed(uint8_t row, uint8_t col, uint8_t r, uint8_t g, uint8_t b)
+void setLed(uint8_t row, uint8_t col, rgb color)
 {
     if (ledconf[row][col].driver == DRIVER_UNUSED) return;
     i2csetSlaveAddr(ledconf[row][col].driver);
 
     // if we write red channel first, the driver stops working
     // we don't know why.. :/
-    i2cWriteReg(ledconf[row][col].g, g);
-    i2cWriteReg(ledconf[row][col].r, r);
-    i2cWriteReg(ledconf[row][col].b, b);
+    i2cWriteReg(ledconf[row][col].g, color.g);
+    i2cWriteReg(ledconf[row][col].r, color.r);
+    i2cWriteReg(ledconf[row][col].b, color.b);
 }
 
 void startup(setupInstructions setup)
@@ -104,11 +112,14 @@ void startup(setupInstructions setup)
     for (int i = 0; i < MATRIX_H; i++)
         for (int j = 0; j < MATRIX_W; j++) animation[i][j] = 0;
 
+    brightness_step = 2;
+    updateBrightnessRaw();
+
     HALsetup(setup);
     btInit();
     initLedMatrix();
 
-    delayms(100);  // wait for switch voltage to settle
+    delayms(2);  // wait for switch voltage to settle
 
     btMode = readPin(SW_BTMODE);
 }
@@ -159,6 +170,22 @@ void newHostPressed(uint8_t idx)
     }
     else if (btstatus == BDS_Disconnected)
         btConnect(idx, 2);
+}
+
+void changeBrightness(bool inc)
+{
+    if (inc)
+    {
+        if (brightness_step < 10) brightness_step++;
+    }
+    else
+    {
+        if (brightness_step > 1) brightness_step--;
+    }
+
+    // eventually update eeprom here
+
+    updateBrightnessRaw();
 }
 
 KBShortcut getShortcut(keymap* km, bool* fn)
@@ -212,6 +239,10 @@ KBShortcut getShortcut(keymap* km, bool* fn)
                 return KBS_FN_4;
             case 0x29:
                 return KBS_FN_ESC;
+            case 0x4b:
+                return KBS_FN_PGUP;
+            case 0x4e:
+                return KBS_FN_PGDN;
         }
     }
 
@@ -295,6 +326,20 @@ void onceShortcuts(KBShortcut sh)
 
         if (idx != 0) newHostPressed(idx);
     }
+
+    switch (sh)
+    {
+        case KBS_FN_PGDN:
+            changeBrightness(false);
+            break;
+
+        case KBS_FN_PGUP:
+            changeBrightness(true);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void poweroff(void)
@@ -360,12 +405,25 @@ bool isBluetoothIndicator(uint8_t i, uint8_t j)
     return j == 1 || j == 2 || j == 3;
 }
 
-void setBluetoothIndicatorLed(uint8_t i, uint8_t j, uint8_t r, uint8_t g, uint8_t b)
+void setBluetoothIndicatorLed(uint8_t i, uint8_t j, rgb color)
 {
     if (btGetHostIndex() == j)
-        setLed(i, j, 0, 0, 255);
-    else
-        setLed(i, j, r, g, b);
+    {
+        color.r = 0;
+        color.g = 0;
+        color.b = 255;
+    }
+
+    setLed(i, j, color);
+}
+
+rgb lightEffect(uint8_t animation)
+{
+    return (rgb){
+        .r = map(animation, 0, 255, brightness, 255),
+        .g = map(animation, 0, 255, brightness, 0),
+        .b = map(animation, 0, 255, brightness, 0),
+    };
 }
 
 void loop()
@@ -375,6 +433,7 @@ void loop()
     static KBLeds kbLeds;
     static uint8_t blinker   = 0;
     static uint32_t timeTick = 0;
+    static bool firstCycle   = true;
 
     timeTick = getCurrentTicks();
 
@@ -461,6 +520,7 @@ void loop()
     //
 
     writePin(LED_CAPS, kbLeds.capslock);
+    rgb color;
 
     for (int i = 0; i < 6; i++)
     {
@@ -479,10 +539,12 @@ void loop()
 
             // colors
 
+            color = lightEffect(animation[i][j]);
+
             if (btMode && btstatus == BDS_Pairing && isBluetoothIndicator(i, j))
-                setBluetoothIndicatorLed(1, j, 255, 255 - animation[i][j], 255 - animation[i][j]);
+                setBluetoothIndicatorLed(1, j, color);
             else
-                setLed(i, j, 255, 255 - animation[i][j], 255 - animation[i][j]);
+                setLed(i, j, color);
         }
     }
 

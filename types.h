@@ -97,6 +97,13 @@ extern "C"
 
     typedef struct
     {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+    } rgb;
+
+    typedef struct
+    {
         uint32_t row[6];
     } keymap;
 
@@ -196,6 +203,9 @@ extern "C"
         KBS_FN_3,    // bluetooth slot 3
         KBS_FN_4,    // bluetooth discoverable
         KBS_FN_ESC,  // bluetooth device factory reset
+        //
+        KBS_FN_PGUP,  // brightness increase
+        KBS_FN_PGDN,  // brightness decrease
     } KBShortcut;
 
     typedef struct
