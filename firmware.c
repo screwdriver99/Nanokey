@@ -7,6 +7,7 @@
 #include "hal.h"
 #include "keyboardhid.h"
 #include "main.h"
+#include "nvmem.h"
 #include "types.h"
 
 bool btMode                    = false;
@@ -14,6 +15,8 @@ BluetoothDeviceStatus btstatus = BDS_Disconnected;
 uint8_t animation[MATRIX_H][MATRIX_W];
 uint8_t brightness_step = 10;
 uint8_t brightness      = 255;
+
+#define BRIGHTNESS_NVS_ID 0
 
 uint8_t map(uint8_t val, uint8_t min, uint8_t max, uint8_t newmin, uint8_t newmax)
 {
@@ -112,7 +115,16 @@ void startup(setupInstructions setup)
     for (int i = 0; i < MATRIX_H; i++)
         for (int j = 0; j < MATRIX_W; j++) animation[i][j] = 0;
 
-    brightness_step = 2;
+    // nvFormat();
+    nvInit();
+
+    uint64_t b = 0;
+
+    if (nvRead(BRIGHTNESS_NVS_ID, &b) != 0)
+        brightness_step = 2;
+    else if (b >= 1 && b <= 10)
+        brightness_step = b;
+
     updateBrightnessRaw();
 
     HALsetup(setup);
@@ -183,7 +195,8 @@ void changeBrightness(bool inc)
         if (brightness_step > 1) brightness_step--;
     }
 
-    // eventually update eeprom here
+    // update non volatile storage
+    nvWrite(BRIGHTNESS_NVS_ID, brightness_step);
 
     updateBrightnessRaw();
 }
@@ -243,6 +256,8 @@ KBShortcut getShortcut(keymap* km, bool* fn)
                 return KBS_FN_PGUP;
             case 0x4e:
                 return KBS_FN_PGDN;
+            case 0x49:
+                return KBS_FN_INS;
         }
     }
 
@@ -285,6 +300,14 @@ void kpShortcuts(KBShortcut sh)
         {
             btModuleFactoryReset();
         }
+    }
+
+    if (sh == KBS_FN_INS)
+    {
+        // switch off led matrix to give feedback
+        writePin(MATRIX_ENA, false);
+        // go to DFU
+        JumpToBootloader();
     }
 }
 

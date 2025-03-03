@@ -45,6 +45,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     firmware.c
     hal.c
     keyboardhid.c
+    nvmem.c
 
     #ST USB MIDDLEWARE SOURCE FILES
     ST_USB_MW/usbd_conf.c

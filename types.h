@@ -206,6 +206,8 @@ extern "C"
         //
         KBS_FN_PGUP,  // brightness increase
         KBS_FN_PGDN,  // brightness decrease
+        //
+        KBS_FN_INS,  // DFU mode
     } KBShortcut;
 
     typedef struct
