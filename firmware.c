@@ -3,17 +3,20 @@
 #include <math.h>
 #include <string.h>
 
+#include "Core/Inc/main.h"
+#include "battery.h"
 #include "bt.h"
 #include "hal.h"
 #include "keyboardhid.h"
-#include "main.h"
+#include "keymap.h"
+#include "ledmatrix.h"
 #include "nvmem.h"
-#include "types.h"
 
 bool btMode                    = false;
 BluetoothDeviceStatus btstatus = BDS_Disconnected;
+
 uint8_t animation[MATRIX_H][MATRIX_W];
-uint8_t brightness_step = 10;
+uint8_t brightness_step = 2;
 uint8_t brightness      = 255;
 
 #define BRIGHTNESS_NVS_ID 0
@@ -25,152 +28,21 @@ uint8_t map(uint8_t val, uint8_t min, uint8_t max, uint8_t newmin, uint8_t newma
 
 void updateBrightnessRaw() { brightness = map(brightness_step, 1, 10, 10, 255); }
 
-void initLedDriver()
+void flashLeds()
 {
-    i2cSelectBank(0x03);
+    bool l1 = readPin(LED_BATLOW);
+    bool l2 = readPin(LED_BT);
+    bool l3 = readPin(LED_CAPS);
 
-    // go to shutdown mode
-    i2cWriteReg(0x00, 0x00);
-    // set internal pullup and pulldown
-    i2cWriteReg(0x13, 0xAA);
-    // set number of scan phases
-    i2cWriteReg(0x14, 0x00);
-    // set PWM delay phase
-    i2cWriteReg(0x15, 0x04);
-    // set sink/source slew rates
-    i2cWriteReg(0x16, 0xC0);
-    // disable IREF mode
-    i2cWriteReg(0x1A, 0x00);
+    writePin(LED_BATLOW, true);
+    writePin(LED_BT, true);
+    writePin(LED_CAPS, true);
 
-    i2cSelectBank(0x00);
+    delayms(200);
 
-    // disable all LEDs
-    for (int i = 0; i < 0x18; i++)
-    {
-        i2cWriteReg(i, 0x00);
-    }
-
-    i2cSelectBank(0x01);
-
-    // set light intensity to zero
-    for (int i = 0; i < 0xBF; i++)
-    {
-        i2cWriteReg(i, 0x00);
-    }
-
-    i2cSelectBank(0x04);
-
-    // set LEDs current source to 8,8mA to preserve LED life
-    uint8_t buf[12];
-    memset(buf, 0x38, sizeof(buf));
-    for (int i = 0; i < 12; i++)
-    {
-        i2cWriteReg(i, buf[i]);
-    }
-
-    i2cSelectBank(0x00);
-
-    // enable all LEDs
-    for (int i = 0; i < 0x18; i++)
-    {
-        i2cWriteReg(i, 0xff);
-    }
-
-    i2cSelectBank(0x03);
-    // exit from shutdown mode
-    i2cWriteReg(0x00, 0x01);
-    // leave PWM control register selected
-    i2cSelectBank(0x01);
-}
-
-void initLedMatrix()
-{
-    // disable hardware shutdown if enabled
-    writePin(MATRIX_ENA, true);
-
-    delayms(25);
-
-    // init both LED drivers
-    i2csetSlaveAddr(DRIVER_ADDR_1);
-    initLedDriver();
-
-    i2csetSlaveAddr(DRIVER_ADDR_2);
-    initLedDriver();
-}
-
-void setLed(uint8_t row, uint8_t col, rgb color)
-{
-    if (ledconf[row][col].driver == DRIVER_UNUSED) return;
-    i2csetSlaveAddr(ledconf[row][col].driver);
-
-    // if we write red channel first, the driver stops working
-    // we don't know why.. :/
-    i2cWriteReg(ledconf[row][col].g, color.g);
-    i2cWriteReg(ledconf[row][col].r, color.r);
-    i2cWriteReg(ledconf[row][col].b, color.b);
-}
-
-void startup(setupInstructions setup)
-{
-    for (int i = 0; i < MATRIX_H; i++)
-        for (int j = 0; j < MATRIX_W; j++) animation[i][j] = 0;
-
-    // nvFormat();
-    nvInit();
-
-    uint64_t b = 0;
-
-    if (nvRead(BRIGHTNESS_NVS_ID, &b) != 0)
-        brightness_step = 2;
-    else if (b >= 1 && b <= 10)
-        brightness_step = b;
-
-    updateBrightnessRaw();
-
-    HALsetup(setup);
-    btInit();
-    initLedMatrix();
-
-    delayms(2);  // wait for switch voltage to settle
-
-    btMode = readPin(SW_BTMODE);
-}
-
-void addKeyCode(report_keyboard_t* report, uint8_t kc)
-{
-    // find first available slot
-    for (uint8_t i = 0; i < 6; i++)
-        if (report->std.keys[i] == NOKC)
-        {
-            report->std.keys[i] = kc;
-            return;
-        }
-}
-
-uint8_t keytobf(uint8_t kc)
-{
-    switch (kc)
-    {
-        case RGUI:
-            return RGUIB;
-        case RALT:
-            return RALTB;
-        case RSHF:
-            return RSHFB;
-        case RCTL:
-            return RCTLB;
-        case LGUI:
-            return LGUIB;
-        case LALT:
-            return LALTB;
-        case LSHF:
-            return LSHFB;
-        case LCTL:
-            return LCTLB;
-
-        default:
-            return 0x00;
-    }
+    writePin(LED_BATLOW, l1);
+    writePin(LED_BT, l2);
+    writePin(LED_CAPS, l3);
 }
 
 void newHostPressed(uint8_t idx)
@@ -186,82 +58,14 @@ void newHostPressed(uint8_t idx)
 
 void changeBrightness(bool inc)
 {
-    if (inc)
-    {
-        if (brightness_step < 10) brightness_step++;
-    }
-    else
-    {
-        if (brightness_step > 1) brightness_step--;
-    }
+    if (inc && brightness_step < 10)
+        brightness_step++;
+    else if (!inc && brightness_step > 1)
+        brightness_step--;
 
     // update non volatile storage
     nvWrite(BRIGHTNESS_NVS_ID, brightness_step);
-
     updateBrightnessRaw();
-}
-
-KBShortcut getShortcut(keymap* km, bool* fn)
-{
-    uint8_t key = NOKC;
-    bool fnkey  = false;
-
-    for (int i = 0; i < 6; i++)
-    {
-        for (int j = 0; j < 17; j++)
-        {
-            if (km->row[i] & ((uint32_t)0x1 << j))
-            {
-                if (i == 5 && j == 12)  // FN pressed
-                {
-                    fnkey = true;
-                }
-                else if (!keytobf(keycodes[i][j]))  // not a modifier key
-                {
-                    key = keycodes[i][j];
-                    if (fnkey) break;  // already detected
-                }
-            }
-        }
-        if (fnkey && key != NOKC) break;  // already detected
-    }
-
-    if (fn) *fn = fnkey;
-
-    // shortcut state machine
-
-    static bool waitforkey = false;
-
-    if (!fnkey)
-        waitforkey = false;
-
-    else if (!waitforkey && key == NOKC)  // FN key pressed, not pressed before, no other key pressed
-        waitforkey = true;
-
-    else if (waitforkey && key != NOKC)  // FN key pressed, pressed before and also other key pressed
-    {
-        switch (key)
-        {
-            case 0x1e:
-                return KBS_FN_1;
-            case 0x1f:
-                return KBS_FN_2;
-            case 0x20:
-                return KBS_FN_3;
-            case 0x21:
-                return KBS_FN_4;
-            case 0x29:
-                return KBS_FN_ESC;
-            case 0x4b:
-                return KBS_FN_PGUP;
-            case 0x4e:
-                return KBS_FN_PGDN;
-            case 0x49:
-                return KBS_FN_INS;
-        }
-    }
-
-    return KBS_NONE;
 }
 
 // implement 'keep pressed' shortcuts
@@ -302,12 +106,20 @@ void kpShortcuts(KBShortcut sh)
         }
     }
 
-    if (sh == KBS_FN_INS)
+    switch (sh)
     {
-        // switch off led matrix to give feedback
-        writePin(MATRIX_ENA, false);
-        // go to DFU
-        JumpToBootloader();
+        case KBS_FN_INS:
+            writePin(MATRIX_ENA, false);  // switch off led matrix to give feedback
+            JumpToBootloader();           // go to DFU
+            break;
+
+        case KBS_FN_DEL:
+            nvFormat();   // restore to factory settings
+            flashLeds();  // flash all 3 leds to give feedback
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -365,52 +177,6 @@ void onceShortcuts(KBShortcut sh)
     }
 }
 
-void poweroff(void)
-{
-    PWR->SCR = PWR_SCR_CWUF;
-    PWR->CR1 |= PWR_CR1_LPMS_SHUTDOWN;
-    (void)PWR->CR1;
-    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-    DBGMCU->CR = 0;
-    // Enter low-power mode
-    while (true)
-    {
-        __DSB();
-        __WFI();
-    }
-}
-
-void checkBattery()
-{
-    uint16_t batteryVoltage = btGetBatteryVoltage();
-    if (batteryVoltage == 0) return;  // protocol error / not yet read
-
-    static uint8_t blinker = 0;
-
-    if (batteryVoltage >= BATTERY_FULL)  // battery completely charged
-    {
-        writePin(LED_BATLOW, false);
-        blinker = 0;
-    }
-    else if (batteryVoltage >= BATTERY_LOW)  // battery normal
-    {
-        writePin(LED_BATLOW, true);
-        blinker = 0;
-    }
-    else if (batteryVoltage > BATTERY_SHD)  // battery low, not yet critical
-    {
-        // blink red
-        writePin(LED_BATLOW, blinker++ < 10);
-        if (blinker == 20) blinker = 0;
-    }
-    else if (readPin(BATPOW))  // battery critical, goto low power to preserve battery
-    {
-        // enable LEDs hardware shutdown
-        writePin(MATRIX_ENA, false);
-        poweroff();
-    }
-}
-
 void decrement(uint8_t* val)
 {
     uint8_t step = ceil(((float)256 - (float)*val) / 15.0f);
@@ -449,6 +215,34 @@ rgb lightEffect(uint8_t animation)
     };
 }
 
+void startup(setupInstructions setup)
+{
+    HALsetup(setup);
+
+    // check DFU mode
+    if (isESCPressed()) JumpToBootloader();
+
+    for (int i = 0; i < MATRIX_H; i++)
+        for (int j = 0; j < MATRIX_W; j++) animation[i][j] = 0;
+
+    nvInit();
+
+    uint64_t b = 0;
+
+    if (nvRead(BRIGHTNESS_NVS_ID, &b) != 0)
+        brightness_step = 2;
+    else if (b >= 1 && b <= 10)
+        brightness_step = b;
+
+    updateBrightnessRaw();
+
+    btInit();
+    initLedMatrix();
+
+    delayms(2);  // wait for switch voltage to settle
+    btMode = readPin(SW_BTMODE);
+}
+
 void loop()
 {
     static keymap km;
@@ -456,18 +250,12 @@ void loop()
     static KBLeds kbLeds;
     static uint8_t blinker   = 0;
     static uint32_t timeTick = 0;
-    static bool firstCycle   = true;
 
     timeTick = getCurrentTicks();
 
     bool fnkey = false;
 
     getKeys(&km);
-
-    if (firstCycle)
-        if (km.row[0] & (uint32_t)0x1) JumpToBootloader();  // DFU with ESC key
-
-    firstCycle = false;
 
     KBShortcut shcut = getShortcut(&km, &fnkey);
 

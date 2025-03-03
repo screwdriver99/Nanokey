@@ -208,6 +208,7 @@ extern "C"
         KBS_FN_PGDN,  // brightness decrease
         //
         KBS_FN_INS,  // DFU mode
+        KBS_FN_DEL,  // NV storage erase
     } KBShortcut;
 
     typedef struct
@@ -264,6 +265,10 @@ extern "C"
 #define SW_BTMODE 16
 #define SW_MACMODE 17
 #define BATPOW 18
+
+// GENERAL DEFINES:
+#define MATRIX_W 17
+#define MATRIX_H 6
 
 #ifdef __cplusplus
 }

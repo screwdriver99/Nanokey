@@ -181,6 +181,18 @@ void getKeys(keymap* km)
     writePin(COL_0, true);
 }
 
+bool isESCPressed()
+{
+    writePin(COL_0, false);
+    _delay(50);
+
+    bool esc = readPin(ROW_0);
+
+    writePin(COL_0, true);
+
+    return esc;
+}
+
 //========================USB===============================
 
 void usbSendKeys(report_keyboard_t* report)

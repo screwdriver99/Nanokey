@@ -39,6 +39,8 @@ extern "C"
     //=========KEYS=============
     void getKeys(keymap* km);
 
+    bool isESCPressed();
+
     //==========USB=============
     void usbSendKeys(report_keyboard_t* report);
 
