@@ -30,11 +30,16 @@ extern "C"
 #define LSHF 0xe1
 #define LCTL 0xe0
 
+// CUSTOM KEYS (MSW = ff)
+#define M1 0xff01
+#define M2 0xff02
+#define M3 0xff03
+
 // KEYCODE MODE
 #define KCMODE_WIN 0x00
 #define KCMODE_MAC 0x01
 
-    static const uint8_t keycodes[][MATRIX_W][2] = {
+    static const uint16_t keycodes[][MATRIX_W][2] = {
         // ( WIN | MAC )
         {
             // ROW 1
@@ -52,9 +57,9 @@ extern "C"
             {0x44, 0x44},  // F11
             {0x45, 0x45},  // F12
             {NOKC, NOKC},  // ghost
-            {NOKC, NOKC},  // M1
-            {NOKC, NOKC},  // M2
-            {NOKC, NOKC},  // M3
+            {M1, M1},      // M1
+            {M2, M2},      // M2
+            {M3, M3},      // M3
         },
         {
             // ROW 2
@@ -160,7 +165,7 @@ extern "C"
 
     void addKeyCode(report_keyboard_t* report, uint8_t kc);
 
-    uint8_t keytobf(uint8_t kc);
+    uint8_t keyToBitField(uint16_t kc);
 
     KBShortcut getShortcut(keymap* km, bool* fn, uint8_t kcmode);
 

@@ -173,6 +173,15 @@ void onceShortcuts(KBShortcut sh)
             changeBrightness(true);
             break;
 
+        case KBS_FN_M1:
+            break;
+
+        case KBS_FN_M2:
+            break;
+
+        case KBS_FN_M3:
+            break;
+
         default:
             break;
     }
@@ -275,7 +284,7 @@ void loop()
         {
             if (km.row[i] & ((uint32_t)0x1 << j))
             {
-                mod = keytobf(keycodes[i][j][kcmode]);
+                mod = keyToBitField(keycodes[i][j][kcmode]);
                 if (mod)
                     kbReport.std.mods |= mod;
                 else

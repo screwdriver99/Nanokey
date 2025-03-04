@@ -198,6 +198,7 @@ extern "C"
     typedef enum
     {
         KBS_NONE,
+        //
         KBS_FN_1,    // bluetooth slot 1
         KBS_FN_2,    // bluetooth slot 2
         KBS_FN_3,    // bluetooth slot 3
@@ -209,6 +210,10 @@ extern "C"
         //
         KBS_FN_INS,  // DFU mode
         KBS_FN_DEL,  // NV storage erase
+        //
+        KBS_FN_M1,
+        KBS_FN_M2,
+        KBS_FN_M3,
     } KBShortcut;
 
     typedef struct

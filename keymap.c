@@ -11,7 +11,7 @@ void addKeyCode(report_keyboard_t* report, uint8_t kc)
         }
 }
 
-uint8_t keytobf(uint8_t kc)
+uint8_t keyToBitField(uint16_t kc)
 {
     switch (kc)
     {
@@ -39,8 +39,8 @@ uint8_t keytobf(uint8_t kc)
 
 KBShortcut getShortcut(keymap* km, bool* fn, uint8_t kcmode)
 {
-    uint8_t key = NOKC;
-    bool fnkey  = false;
+    uint16_t key = NOKC;
+    bool fnkey   = false;
 
     for (int i = 0; i < 6; i++)
     {
@@ -49,10 +49,8 @@ KBShortcut getShortcut(keymap* km, bool* fn, uint8_t kcmode)
             if (km->row[i] & ((uint32_t)0x1 << j))
             {
                 if (i == 5 && j == 12)  // FN pressed
-                {
                     fnkey = true;
-                }
-                else if (!keytobf(keycodes[i][j][kcmode]))  // not a modifier key
+                else if (!keyToBitField(keycodes[i][j][kcmode]))  // not a modifier key
                 {
                     key = keycodes[i][j][kcmode];
                     if (fnkey) break;  // already detected
@@ -96,6 +94,12 @@ KBShortcut getShortcut(keymap* km, bool* fn, uint8_t kcmode)
                 return KBS_FN_INS;
             case 0x4c:
                 return KBS_FN_DEL;
+            case M1:
+                return KBS_FN_M1;
+            case M2:
+                return KBS_FN_M2;
+            case M3:
+                return KBS_FN_M3;
         }
     }
 
