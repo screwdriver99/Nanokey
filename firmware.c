@@ -11,6 +11,7 @@
 #include "keymap.h"
 #include "ledmatrix.h"
 #include "nvmem.h"
+#include "types.h"
 
 bool btMode                    = false;
 BluetoothDeviceStatus btstatus = BDS_Disconnected;
@@ -251,13 +252,16 @@ void loop()
     static uint8_t blinker   = 0;
     static uint32_t timeTick = 0;
 
+    static uint8_t kcmode;
+    kcmode = readPin(SW_MACMODE) ? KCMODE_MAC : KCMODE_WIN;
+
     timeTick = getCurrentTicks();
 
     bool fnkey = false;
 
     getKeys(&km);
 
-    KBShortcut shcut = getShortcut(&km, &fnkey);
+    KBShortcut shcut = getShortcut(&km, &fnkey, kcmode);
 
     memset(&kbReport, 0x00, sizeof(report_keyboard_t));
     memset(&kbLeds, 0x00, sizeof(KBLeds));
@@ -271,12 +275,12 @@ void loop()
         {
             if (km.row[i] & ((uint32_t)0x1 << j))
             {
-                mod = keytobf(keycodes[i][j]);
+                mod = keytobf(keycodes[i][j][kcmode]);
                 if (mod)
                     kbReport.std.mods |= mod;
                 else
                 {
-                    addKeyCode(&kbReport, keycodes[i][j]);
+                    addKeyCode(&kbReport, keycodes[i][j][kcmode]);
                     c++;
                     if (c == 6) break;
                 }

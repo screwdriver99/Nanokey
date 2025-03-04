@@ -37,7 +37,7 @@ uint8_t keytobf(uint8_t kc)
     }
 }
 
-KBShortcut getShortcut(keymap* km, bool* fn)
+KBShortcut getShortcut(keymap* km, bool* fn, uint8_t kcmode)
 {
     uint8_t key = NOKC;
     bool fnkey  = false;
@@ -52,9 +52,9 @@ KBShortcut getShortcut(keymap* km, bool* fn)
                 {
                     fnkey = true;
                 }
-                else if (!keytobf(keycodes[i][j]))  // not a modifier key
+                else if (!keytobf(keycodes[i][j][kcmode]))  // not a modifier key
                 {
-                    key = keycodes[i][j];
+                    key = keycodes[i][j][kcmode];
                     if (fnkey) break;  // already detected
                 }
             }
