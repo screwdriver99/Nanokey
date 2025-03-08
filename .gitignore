@@ -69,3 +69,4 @@ cscope.*
 
 ### Vagrant Patch ###
 *.box
+CMakeLists.txt.user
