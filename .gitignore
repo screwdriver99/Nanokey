@@ -6,7 +6,7 @@
 *~
 *.swp
 *.ninja
-*.cmake
+
 compile_commands.json
 CMakeCache.txt
 CMakePresets.json

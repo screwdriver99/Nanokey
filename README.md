@@ -21,10 +21,10 @@
 mkdir build && cd build
 ```
 
-2. make the build system
+2. make the build system, adding paths for the arm-none-eabi- toolchain
 
 ```
-cmake ..
+cmake -DCMAKE_C_COMPILER:FILEPATH=<path> -DCMAKE_CXX_COMPILER:FILEPATH=<path> -DCMAKE_LINKER:FILEPATH=<path> -DCMAKE_OBJCOPY:FILEPATH=<path> ..
 ```
 
 3. build the project
@@ -36,7 +36,7 @@ make
 4. flash the firmware using a tool of your choice (openocd/STM32CubeProgrammer)
 
 
-After the first Nanokey flash, it will be possible to boot to DFU keeping ESC pressed at startup.<br>
+After the first Nanokey flash, it will be possible to boot to DFU keeping ESC pressed at startup or using FN+INS shortcut.<br>
 
 
 <h2>Roadmap</h2>
@@ -60,7 +60,7 @@ Feel free to improve the code and ask for a pull request
 
 <h2>License 🛡️</h2>
 
-This project contains some STM and Keychron code. 
+This project contains some STM and Keychron code.
 
 Please refer to the licensing information contained in the relevant directories.
 
